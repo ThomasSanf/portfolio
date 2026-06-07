@@ -19,7 +19,7 @@ export default function About() {
         <div className={styles.aboutImageWrap}>
           <span className={styles.aboutFrame} />
           {/* Reuses the same photo as the hero. Drop yours in /public/profile.jpg */}
-          <img className={styles.aboutImage} src="/profile.jpg" alt={site.name} />
+          <img className={styles.aboutImage} src="/profile1.jpg" alt={site.name} />
         </div>
 
         <div className={styles.aboutText}>
