@@ -1,0 +1,309 @@
+<svg viewBox="0 0 1720 1130" xmlns="http://www.w3.org/2000/svg" font-family="system-ui, 'Segoe UI', Helvetica, Arial, sans-serif">
+  <defs>
+    <marker id="ar" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto" markerUnits="userSpaceOnUse">
+      <path d="M0,0 L8,3.2 L0,6.4 Z" fill="#3c4754"/>
+    </marker>
+    <marker id="arc" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto" markerUnits="userSpaceOnUse">
+      <path d="M0,0 L7,3 L0,6 Z" fill="#8a93a0"/>
+    </marker>
+  </defs>
+  <style>
+    .ttl  { font-size: 12.5px; font-weight: 700; }
+    .acc  { stroke-width: 2.6; }
+    .b    { font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace; font-size: 10px; fill: #2a333d; }
+    .s    { font-family: ui-monospace, Menlo, monospace; font-size: 9px; fill: #54606c; }
+    .w    { font-size: 9px; fill: #5a6470; font-family: ui-monospace, Menlo, monospace; }
+    .sig  { stroke: #3c4754; stroke-width: 1.6; fill: none; }
+    .data { stroke: #2f3a45; stroke-width: 2.3; fill: none; }
+    .ctl  { stroke: #8a93a0; stroke-width: 1.3; fill: none; stroke-dasharray: 5 3; }
+    .zone { fill-opacity: 1; stroke-width: 1.5; stroke-dasharray: 7 5; }
+  </style>
+
+  <rect x="0" y="0" width="1720" height="1130" fill="#fbfcfd"/>
+
+  <text x="32" y="40" font-size="23" font-weight="700" fill="#1c2530">SoC — Memory Architecture &amp; ROM Latency Path</text>
+  <text x="32" y="62" font-size="12" fill="#5a6470" font-family="ui-monospace, Menlo, monospace">top_hdmi_gb · gb_rom_ddr_bridge · lpddr2_rom_ctrl_128_fifo · lpddr2_emif (UniPHY) — low-latency local memory shields the cycle-accurate core from DDR latency</text>
+  <line x1="32" y1="76" x2="1688" y2="76" stroke="#dde3e8" stroke-width="1.5"/>
+
+  <!-- clock-domain zones -->
+  <rect class="zone" x="20" y="92" width="824" height="520" rx="10" fill="#f4f8fc" stroke="#9cc3ea"/>
+  <rect class="zone" x="860" y="92" width="840" height="520" rx="10" fill="#f3faf6" stroke="#9fd4ad"/>
+  <rect x="30" y="100" width="226" height="18" rx="9" fill="#1f5e96"/>
+  <text x="40" y="113" font-size="10" fill="#fff" font-family="ui-monospace, Menlo, monospace" font-weight="700">soc_clk ≈ 4.1667 MHz</text>
+  <rect x="870" y="100" width="270" height="18" rx="9" fill="#2c7440"/>
+  <text x="880" y="113" font-size="10" fill="#fff" font-family="ui-monospace, Menlo, monospace" font-weight="700">ddr_afi_clk — LPDDR2 UniPHY (~150 MHz)</text>
+
+  <!-- CDC boundary line -->
+  <line x1="852" y1="92" x2="852" y2="968" class="ctl" stroke="#5a3a9c" stroke-width="1.8"/>
+  <text x="846" y="640" transform="rotate(-90 846 640)" font-size="10" fill="#5a3a9c" font-family="ui-monospace, Menlo, monospace" font-weight="700">CLOCK-DOMAIN CROSSING</text>
+
+  <!-- ===== CPU / SoC ===== -->
+  <rect x="40" y="128" width="300" height="188" rx="8" fill="#eef5fc" stroke="#9cc3ea" stroke-width="1.4"/>
+  <text class="ttl" x="54" y="149" fill="#1f5e96">GameBoySoC — CPU core</text>
+  <line class="acc" x1="54" y1="156" x2="326" y2="156" stroke="#1f5e96"/>
+  <text class="b" x="54" y="174">LR35902 CPU · PPU · APU · timers</text>
+  <text class="b" x="54" y="190">cartridge-ROM master:</text>
+  <text class="b" x="54" y="205">&#160;extRomReq, extRomAddr[20:0]</text>
+  <text class="b" x="54" y="220">&#160;&#8592; extRomData[8], io_stall</text>
+  <text class="b" x="54" y="236">cartType ($0147) → MBC mode</text>
+  <text class="s" x="54" y="256">PPU → framebuffer · APU → audio</text>
+  <text class="s" x="54" y="270" fill="#a8322e">cycle-accurate: io_stall freezes</text>
+  <text class="s" x="54" y="283" fill="#a8322e">the entire core in lock-step</text>
+
+  <!-- ===== ROM read decode ===== -->
+  <rect x="372" y="128" width="300" height="188" rx="8" fill="#eef5fc" stroke="#9cc3ea" stroke-width="1.4"/>
+  <text class="ttl" x="386" y="149" fill="#1f5e96">ROM READ DECODE + STALL</text>
+  <line class="acc" x1="386" y1="156" x2="658" y2="156" stroke="#1f5e96"/>
+  <text class="b" x="386" y="174">addr &lt; 512 KiB → SRAM (no wait)</text>
+  <text class="b" x="386" y="190">otherwise → DDR bridge</text>
+  <text class="b" x="386" y="208">soc_rom_data =</text>
+  <text class="b" x="386" y="222">&#160;sram | line_hit | ddr-byte</text>
+  <text class="b" x="386" y="240" fill="#a8322e">gb_stall = miss-launch | ddr-wait</text>
+  <text class="s" x="386" y="262">stall watchdog → diagnostic colour</text>
+  <text class="s" x="386" y="278">if a ROM wait hangs too long</text>
+
+  <!-- ===== Async SRAM ===== -->
+  <rect x="372" y="336" width="300" height="120" rx="8" fill="#eef5fc" stroke="#9cc3ea" stroke-width="1.4"/>
+  <text class="ttl" x="386" y="357" fill="#1f5e96">ASYNC SRAM (board, 16-bit)</text>
+  <line class="acc" x1="386" y1="364" x2="658" y2="364" stroke="#1f5e96"/>
+  <text class="b" x="386" y="382">first 512 KiB ROM mirror</text>
+  <text class="b" x="386" y="398">byte lanes: even=LB, odd=UB</text>
+  <text class="b" x="386" y="414" fill="#2c9a4f">ZERO wait-state read path</text>
+  <text class="s" x="386" y="432">load writes stretched 6 AFI clks</text>
+  <circle cx="650" cy="410" r="6" fill="#2c9a4f"/>
+
+  <!-- ===== Framebuffer ===== -->
+  <rect x="40" y="336" width="300" height="120" rx="8" fill="#eef5fc" stroke="#9cc3ea" stroke-width="1.4"/>
+  <text class="ttl" x="54" y="357" fill="#1f5e96">FRAMEBUFFER ×2 (M10K)</text>
+  <line class="acc" x1="54" y1="364" x2="326" y2="364" stroke="#1f5e96"/>
+  <text class="b" x="54" y="382">160×144 RGB565, double-buffered</text>
+  <text class="b" x="54" y="398">PPU writes back buf (soc_clk)</text>
+  <text class="b" x="54" y="414">HDMI reads front buf (pix_clk)</text>
+  <text class="s" x="54" y="432">swap only during dual vblank</text>
+
+  <!-- ===== local ROM BRAM ===== -->
+  <rect x="40" y="476" width="300" height="120" rx="8" fill="#eef5fc" stroke="#9cc3ea" stroke-width="1.4"/>
+  <text class="ttl" x="54" y="497" fill="#1f5e96">LOCAL ROM BRAM (M10K, 32 KiB)</text>
+  <line class="acc" x1="54" y1="504" x2="326" y2="504" stroke="#1f5e96"/>
+  <text class="b" x="54" y="522">boot ROM + bank 0/1 mirror</text>
+  <text class="b" x="54" y="538">dual-port: wr@afi · rd@soc</text>
+  <text class="s" x="54" y="556" fill="#a85f17">currently BYPASSED — SRAM fast</text>
+  <text class="s" x="54" y="569" fill="#a85f17">path now covers this window</text>
+  <circle cx="650" cy="536" r="6" fill="#d99a2b" opacity="0.5"/>
+
+  <!-- ===== CDC bridge ===== -->
+  <rect x="712" y="128" width="280" height="300" rx="8" fill="#f4eefc" stroke="#c4b0ec" stroke-width="1.5"/>
+  <text class="ttl" x="724" y="149" fill="#5a3a9c">gb_rom_ddr_bridge</text>
+  <line class="acc" x1="724" y1="156" x2="980" y2="156" stroke="#5a3a9c"/>
+  <line x1="852" y1="160" x2="852" y2="420" class="ctl" stroke="#5a3a9c"/>
+  <text class="s" x="724" y="174" fill="#1f5e96">soc_clk side</text>
+  <text class="b" x="724" y="192">4-line SoC cache</text>
+  <text class="b" x="724" y="206">(4 × 16 B,</text>
+  <text class="b" x="724" y="220">&#160;direct-mapped)</text>
+  <text class="b" x="724" y="240" fill="#2c9a4f">hit → combinational</text>
+  <text class="b" x="724" y="254" fill="#2c9a4f">no CPU stall</text>
+  <text class="s" x="724" y="274">req latch +</text>
+  <text class="s" x="724" y="287">soc_stall gen</text>
+  <text class="s" x="862" y="174" fill="#2c7440">ddr_clk side</text>
+  <text class="b" x="862" y="192">req/ack toggle</text>
+  <text class="b" x="862" y="206">synchronizers</text>
+  <text class="b" x="862" y="226">addr &amp; data</text>
+  <text class="b" x="862" y="240">2-FF CDC +</text>
+  <text class="b" x="862" y="254">1 settle cycle</text>
+  <text class="s" x="862" y="274">demand fill</text>
+  <text class="s" x="862" y="287">only (no prefetch)</text>
+
+  <!-- ===== ROM controller ===== -->
+  <rect x="1066" y="128" width="320" height="300" rx="8" fill="#eef8f1" stroke="#9fd4ad" stroke-width="1.5"/>
+  <text class="ttl" x="1080" y="149" fill="#2c7440">lpddr2_rom_ctrl_128_fifo</text>
+  <line class="acc" x1="1080" y1="156" x2="1372" y2="156" stroke="#2c7440"/>
+  <text class="b" x="1080" y="176">input byte FIFO (256 B)</text>
+  <text class="b" x="1080" y="194">write-coalesce: 16 B → 128-bit</text>
+  <text class="b" x="1080" y="216">read cache: 64 × 16 B line (M10K)</text>
+  <text class="b" x="1080" y="230" fill="#a85f17">&#160;synchronous: hit = +1 cycle</text>
+  <text class="b" x="1080" y="252">Avalon-MM master:</text>
+  <text class="b" x="1080" y="266">&#160;addr[24:0], 128-bit data</text>
+  <text class="b" x="1080" y="280">&#160;burstcount = 1, byteenable[16]</text>
+  <text class="b" x="1080" y="300">rom_ready · rd_busy</text>
+  <text class="s" x="1080" y="320">demand-fill on miss; refills cache</text>
+  <text class="s" x="1080" y="334">line, returns byte + full 128-bit</text>
+  <circle cx="1360" cy="222" r="6" fill="#d99a2b"/>
+
+  <!-- ===== EMIF ===== -->
+  <rect x="1066" y="448" width="320" height="92" rx="8" fill="#eef8f1" stroke="#9fd4ad" stroke-width="1.5"/>
+  <text class="ttl" x="1080" y="469" fill="#2c7440">lpddr2_emif — UniPHY</text>
+  <line class="acc" x1="1080" y1="476" x2="1372" y2="476" stroke="#2c7440"/>
+  <text class="b" x="1080" y="494">Avalon-MM ↔ hard mem ctrl + PHY</text>
+  <text class="b" x="1080" y="510">generates afi_clk · cal_success</text>
+  <text class="s" x="1080" y="528">global/soft reset · OCT calibration</text>
+
+  <!-- ===== external LPDDR2 ===== -->
+  <rect x="1440" y="448" width="240" height="148" rx="8" fill="#f1f4f7" stroke="#b8c2cc" stroke-width="1.5"/>
+  <text class="ttl" x="1454" y="469" fill="#44525f">LPDDR2 SDRAM</text>
+  <text class="s" x="1454" y="484" fill="#44525f">off-chip device</text>
+  <line class="acc" x1="1454" y1="490" x2="1666" y2="490" stroke="#44525f"/>
+  <text class="b" x="1454" y="508">DQ[31:0] · DQS · DM</text>
+  <text class="b" x="1454" y="524">CA · CK/CKE/CS</text>
+  <text class="b" x="1454" y="540">full ROM store (≤ 2 MiB)</text>
+  <text class="b" x="1454" y="560" fill="#a8322e">VARIABLE latency + refresh</text>
+  <circle cx="1666" cy="556" r="6" fill="#cc4036"/>
+
+  <!-- =================== READ-PATH ARROWS =================== -->
+  <path class="data" d="M340,200 L372,200" marker-end="url(#ar)"/>
+  <text class="w" x="344" y="194">extRomReq · addr[20:0]</text>
+  <path class="data" d="M372,244 L340,244" marker-end="url(#ar)"/>
+  <text class="w" x="344" y="258">data[8] · io_stall</text>
+  <circle cx="356" cy="244" r="4.5" fill="#cc4036"/>
+
+  <path class="data" d="M540,316 L540,336" marker-end="url(#ar)"/>
+  <path class="data" d="M500,336 L500,316" marker-end="url(#ar)"/>
+  <text class="w" x="548" y="330">addr&lt;512K</text>
+  <circle cx="520" cy="326" r="4.5" fill="#2c9a4f"/>
+
+  <path class="data" d="M672,200 L712,200" marker-end="url(#ar)"/>
+  <text class="w" x="676" y="194">line addr / miss</text>
+  <path class="data" d="M712,250 L672,250" marker-end="url(#ar)"/>
+  <text class="w" x="676" y="264">hit data · soc_stall</text>
+  <circle cx="692" cy="226" r="4.5" fill="#2c9a4f"/>
+
+  <path class="data" d="M992,200 L1066,200" marker-end="url(#ar)"/>
+  <text class="w" x="998" y="194">rd_req · rd_addr[22:0]</text>
+  <path class="data" d="M1066,256 L992,256" marker-end="url(#ar)"/>
+  <text class="w" x="998" y="270">rd_data · rd_line[128] · valid</text>
+
+  <path class="data" d="M1206,428 L1206,448" marker-end="url(#ar)"/>
+  <text class="w" x="1090" y="444">Avalon W/R 128-bit</text>
+  <path class="data" d="M1266,448 L1266,428" marker-end="url(#ar)"/>
+  <text class="w" x="1272" y="444">rdata·valid·ready</text>
+
+  <path class="data" d="M1386,500 L1440,500" marker-end="url(#ar)"/>
+  <path class="data" d="M1440,524 L1386,524" marker-end="url(#ar)"/>
+  <text class="w" x="1392" y="494">DQ / CA / DQS</text>
+  <circle cx="1413" cy="512" r="4.5" fill="#cc4036"/>
+
+  <!-- framebuffer + audio routing -->
+  <path class="data" d="M190,316 L190,336" marker-end="url(#ar)"/>
+  <text class="w" x="196" y="330">pixel565·we</text>
+  <path class="data" d="M40,400 L28,400 L28,896 L40,896" marker-end="url(#ar)"/>
+  <text class="w" x="16" y="660" transform="rotate(-90 16 660)" fill="#a8322e">RGB565 read (pix_clk)</text>
+
+  <path class="ctl" d="M340,282 L356,282 L356,860 L372,860" marker-end="url(#arc)"/>
+  <text class="w" x="360" y="640" transform="rotate(-90 360 640)">audioLeft/Right[10]</text>
+
+  <!-- =================== ROM LOADING PATH =================== -->
+  <text class="ttl" x="40" y="650" fill="#a85f17">ROM LOADING PATH  (ddr_afi_clk)</text>
+
+  <rect x="40" y="660" width="170" height="120" rx="8" fill="#fdf3e7" stroke="#e9b97e" stroke-width="1.4"/>
+  <text class="ttl" x="54" y="681" fill="#a85f17">SD CARD</text>
+  <line class="acc" x1="54" y1="688" x2="196" y2="688" stroke="#a85f17"/>
+  <text class="b" x="54" y="706">raw ROM image</text>
+  <text class="s" x="54" y="724">SPI 4-wire</text>
+  <text class="s" x="54" y="740">START_SECTOR 0</text>
+
+  <rect x="240" y="660" width="320" height="120" rx="8" fill="#fdf3e7" stroke="#e9b97e" stroke-width="1.4"/>
+  <text class="ttl" x="254" y="681" fill="#a85f17">sd_spi_rom_loader</text>
+  <line class="acc" x1="254" y1="688" x2="546" y2="688" stroke="#a85f17"/>
+  <text class="b" x="254" y="706">streams ROM_BYTES = 2 MiB</text>
+  <text class="b" x="254" y="722">out: ld_addr / ld_data / ld_en</text>
+  <text class="b" x="254" y="738">done · error</text>
+  <text class="s" x="254" y="758">wide timeout → sd_timeout flag</text>
+
+  <rect x="600" y="660" width="260" height="120" rx="8" fill="#fdf3e7" stroke="#e9b97e" stroke-width="1.4"/>
+  <text class="ttl" x="614" y="681" fill="#a85f17">HEADER CAPTURE</text>
+  <line class="acc" x1="614" y1="688" x2="846" y2="688" stroke="#a85f17"/>
+  <text class="b" x="614" y="706">$0147 cartType → MBC select</text>
+  <text class="b" x="614" y="722">$0104/$0105 logo (CE ED)</text>
+  <text class="s" x="614" y="742">sanity check vs raw byte stream</text>
+
+  <rect x="900" y="660" width="230" height="120" rx="8" fill="#fdeeed" stroke="#eda9a6" stroke-width="1.4"/>
+  <text class="ttl" x="914" y="681" fill="#a8322e">rst_soc (sticky ready)</text>
+  <line class="acc" x1="914" y1="688" x2="1116" y2="688" stroke="#a8322e"/>
+  <text class="b" x="914" y="706">release core when</text>
+  <text class="b" x="914" y="722">rom_done &amp; cal_success</text>
+  <text class="s" x="914" y="742">sticky: glitch can't re-reset</text>
+  <text class="s" x="914" y="758">errors → diagnostic colour</text>
+
+  <path class="data" d="M210,720 L240,720" marker-end="url(#ar)"/>
+  <path class="data" d="M560,720 L600,720" marker-end="url(#ar)"/>
+  <text class="w" x="564" y="714">byte stream</text>
+  <path class="data" d="M860,720 L900,720" marker-end="url(#ar)"/>
+  <text class="w" x="862" y="714">done·cal</text>
+
+  <!-- loader fan-out: to ROM ctrl FIFO, SRAM, local BRAM -->
+  <path class="sig" d="M520,660 L520,632 L1020,632 L1020,300 L1066,300" marker-end="url(#ar)"/>
+  <text class="w" x="1024" y="320">ld → FIFO (full ROM → LPDDR2)</text>
+  <path class="sig" d="M360,660 L360,470 L500,470 L500,456" marker-end="url(#ar)"/>
+  <text class="w" x="368" y="466">→ SRAM (512 KiB)</text>
+  <path class="sig" d="M280,660 L280,610 L190,610 L190,596" marker-end="url(#ar)"/>
+  <text class="w" x="196" y="612">→ BRAM (32 KiB)</text>
+  <path class="ctl" d="M1015,660 L1015,470 L690,470 L690,316" marker-end="url(#arc)"/>
+  <text class="w" x="700" y="466">rst_soc gates core (sticky)</text>
+
+  <!-- =================== CONSUMERS =================== -->
+  <text class="ttl" x="40" y="826" fill="#a8322e">DISPLAY / AUDIO OUTPUT</text>
+
+  <rect x="40" y="836" width="300" height="120" rx="8" fill="#fdeeed" stroke="#eda9a6" stroke-width="1.4"/>
+  <text class="ttl" x="54" y="857" fill="#a8322e">HDMI SCANOUT (pix_clk 25 MHz)</text>
+  <line class="acc" x1="54" y1="864" x2="326" y2="864" stroke="#a8322e"/>
+  <text class="b" x="54" y="882">640×480, GB image 2× scaled</text>
+  <text class="b" x="54" y="898">RGB565 → RGB888 → ADV7513</text>
+  <text class="s" x="54" y="916">loading splash + status colours</text>
+  <text class="w" x="54" y="940">→ HDMI_TX_D[23:0] / DE / HS / VS</text>
+
+  <rect x="372" y="836" width="300" height="120" rx="8" fill="#fdeeed" stroke="#eda9a6" stroke-width="1.4"/>
+  <text class="ttl" x="386" y="857" fill="#a8322e">APU SAMPLE CDC (soc → aud)</text>
+  <line class="acc" x1="386" y1="864" x2="658" y2="864" stroke="#a8322e"/>
+  <text class="b" x="386" y="882">req/ack toggle, phase-stable</text>
+  <text class="b" x="386" y="898">post-APU HPF / DC blocker</text>
+  <text class="s" x="386" y="916">muted until boot ROM starts</text>
+
+  <rect x="704" y="836" width="300" height="120" rx="8" fill="#fdeeed" stroke="#eda9a6" stroke-width="1.4"/>
+  <text class="ttl" x="718" y="857" fill="#a8322e">I2S TX (aud_mclk 12.5 MHz)</text>
+  <line class="acc" x1="718" y1="864" x2="990" y2="864" stroke="#a8322e"/>
+  <text class="b" x="718" y="882">48.828 kHz, 16-bit PCM</text>
+  <text class="b" x="718" y="898">→ AUD_BCLK / LRCLK / SDATA</text>
+  <text class="s" x="718" y="916">held in reset until ADV7513 ready</text>
+
+  <path class="data" d="M672,896 L704,896" marker-end="url(#ar)"/>
+  <text class="w" x="676" y="890">aud_mclk</text>
+
+  <!-- =================== LEGEND =================== -->
+  <rect x="1150" y="632" width="538" height="324" rx="8" fill="#ffffff" stroke="#dde3e8" stroke-width="1.3"/>
+  <text class="ttl" x="1166" y="654" fill="#3a434d">LATENCY TIERS  (from the CPU's view)</text>
+  <line class="acc" x1="1166" y1="661" x2="1672" y2="661" stroke="#3a434d"/>
+  <circle cx="1174" cy="680" r="6" fill="#2c9a4f"/>
+  <text class="b" x="1190" y="684">ZERO wait — SRAM fast path (&lt;512 KiB),</text>
+  <text class="b" x="1190" y="699">SoC line-cache hit (combinational)</text>
+  <circle cx="1174" cy="722" r="6" fill="#d99a2b"/>
+  <text class="b" x="1190" y="726">ONE cycle — local BRAM read, SoC-cache</text>
+  <text class="b" x="1190" y="741">fill release-hold, AFI cache hit</text>
+  <circle cx="1174" cy="764" r="6" fill="#cc4036"/>
+  <text class="b" x="1190" y="768">VARIABLE — true LPDDR2 miss → CDC</text>
+  <text class="b" x="1190" y="783">round-trip + DDR access → io_stall asserted</text>
+
+  <line x1="1166" y1="800" x2="1672" y2="800" stroke="#e6ebef"/>
+  <text class="ttl" x="1166" y="820" fill="#3a434d">CLOCK DOMAINS</text>
+  <rect x="1168" y="832" width="14" height="14" rx="3" fill="#eef5fc" stroke="#9cc3ea"/>
+  <text class="b" x="1190" y="843">soc_clk ≈ 4.1667 MHz — GB core</text>
+  <rect x="1168" y="852" width="14" height="14" rx="3" fill="#eef8f1" stroke="#9fd4ad"/>
+  <text class="b" x="1190" y="863">ddr_afi_clk — LPDDR2 UniPHY (~150 MHz)</text>
+  <rect x="1168" y="872" width="14" height="14" rx="3" fill="#fdeeed" stroke="#eda9a6"/>
+  <text class="b" x="1190" y="883">pix_clk 25 MHz · aud_mclk 12.5 MHz</text>
+  <rect x="1168" y="892" width="14" height="14" rx="3" fill="#f4eefc" stroke="#c4b0ec"/>
+  <text class="b" x="1190" y="903">CDC bridge (gb_rom_ddr_bridge)</text>
+  <line x1="1168" y1="924" x2="1200" y2="924" class="ctl"/>
+  <text class="b" x="1208" y="928">- - clock-domain crossing / control</text>
+  <line x1="1380" y1="924" x2="1412" y2="924" class="data"/>
+  <text class="b" x="1420" y="928">data / address bus</text>
+
+  <!-- =================== TIMING-SENSITIVE CALLOUT =================== -->
+  <rect x="40" y="976" width="1648" height="120" rx="8" fill="#fdf1f0" stroke="#e08a86" stroke-width="1.6"/>
+  <text class="ttl" x="56" y="998" fill="#a8322e">TIMING-SENSITIVE REGIONS — must not depend on external DDR latency</text>
+  <line class="acc" x1="56" y1="1005" x2="1672" y2="1005" stroke="#e08a86"/>
+  <text class="b" x="56" y="1024">• Boot ROM + cartridge bank 0/1 (incl. the 0x0100–0x01FF Nintendo-logo fetch): served from zero-wait async SRAM (originally local BRAM) so the cycle-accurate boot never waits on the high-latency DDR bridge.</text>
+  <text class="b" x="56" y="1044">• Any ROM read &lt; 512 KiB and every SoC line-cache hit return with no wait state, preserving exact CPU/PPU timing. Only a genuine LPDDR2 line miss asserts io_stall, which freezes the whole core in lock-step (bounded by a watchdog).</text>
+  <text class="b" x="56" y="1064">• Producer→consumer CDC — framebuffer double-buffer into pix_clk (vblank-gated swap) and APU samples into aud_mclk (req/ack toggle, startup-muted) — keeps variable DDR/SD timing from causing tearing or audio phase drift.</text>
+  <text class="b" x="56" y="1084">• SD ROM loading runs entirely in ddr_afi_clk and is fenced off from the core by the sticky rst_soc: the CPU is only released once rom_done &amp; cal_success, so no half-loaded ROM is ever fetched.</text>
+
+  <text x="1688" y="1116" text-anchor="end" font-size="10" fill="#9aa3ac" font-family="ui-monospace, Menlo, monospace">top_hdmi_gb.v · gb_rom_ddr_bridge.v · lpddr2_rom_ctrl_128_fifo.v · lpddr2_emif.v</text>
+</svg>

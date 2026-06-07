@@ -1,0 +1,242 @@
+<svg viewBox="0 0 1600 900" xmlns="http://www.w3.org/2000/svg" font-family="system-ui, 'Segoe UI', Helvetica, Arial, sans-serif">
+  <defs>
+    <marker id="ar" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto" markerUnits="userSpaceOnUse">
+      <path d="M0,0 L8,3.2 L0,6.4 Z" fill="#3c4754"/>
+    </marker>
+    <marker id="arc" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto" markerUnits="userSpaceOnUse">
+      <path d="M0,0 L7,3 L0,6 Z" fill="#8a93a0"/>
+    </marker>
+  </defs>
+
+  <style>
+    .blk { stroke-width: 1.4; }
+    .ttl { font-size: 13.5px; font-weight: 700; }
+    .acc { stroke-width: 3; }
+    .mono { font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace; font-size: 11px; fill: #2a333d; }
+    .pin  { font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace; font-size: 10.5px; fill: #2a333d; }
+    .wlbl { font-size: 9.5px; fill: #5a6470; font-family: ui-monospace, Menlo, monospace; }
+    .bus  { stroke: #2f3a45; stroke-width: 3; fill: none; }
+    .tap  { stroke: #3c4754; stroke-width: 1.4; fill: none; }
+    .sig  { stroke: #3c4754; stroke-width: 1.6; fill: none; }
+    .ctl  { stroke: #8a93a0; stroke-width: 1.4; fill: none; stroke-dasharray: 4 3; }
+    .jdot { fill: #2f3a45; }
+  </style>
+
+  <!-- background -->
+  <rect x="0" y="0" width="1600" height="900" fill="#fbfcfd"/>
+
+  <!-- title -->
+  <text x="32" y="42" font-size="24" font-weight="700" fill="#1c2530">Sharp LR35902 / SM83 — CPU Core</text>
+  <text x="32" y="64" font-size="12.5" fill="#5a6470" font-family="ui-monospace, Menlo, monospace">Chisel3 RTL schematic · LR35902_Core.scala · 8-state microcoded FSM · 4 T-cycles (T0–T3) per machine cycle</text>
+  <line x1="32" y1="78" x2="1568" y2="78" stroke="#dde3e8" stroke-width="1.5"/>
+
+  <!-- ============ MEMORY / I/O (external) ============ -->
+  <rect class="blk" x="24" y="110" width="150" height="248" rx="8" fill="#f5f6f8" stroke="#c2c8ce"/>
+  <text class="ttl" x="38" y="132" fill="#3a434d">MEMORY / I/O</text>
+  <line class="acc" x1="38" y1="140" x2="162" y2="140" stroke="#3a434d"/>
+  <text class="pin" x="38" y="160">&#8594; memReadData[8]</text>
+  <text class="pin" x="38" y="175">&#8592; memAddr[16]</text>
+  <text class="pin" x="38" y="190">&#8592; memRead</text>
+  <text class="pin" x="38" y="205">&#8592; memWrite</text>
+  <text class="pin" x="38" y="220">&#8592; memWriteData[8]</text>
+  <text class="pin" x="38" y="235">&#8594; ieReg[8]</text>
+  <text class="pin" x="38" y="250">&#8594; ifReg[8]</text>
+  <text class="pin" x="38" y="265">&#8594; stall</text>
+  <text class="pin" x="38" y="280">&#8592; cgbStopPulse</text>
+  <text class="pin" x="38" y="295">&#8596; dbg_* (PC,SP,</text>
+  <text class="pin" x="38" y="310">&#160;&#160;&#160;A..L,IR,state)</text>
+  <text class="pin" x="38" y="325">&#8594; dbg_load / _in</text>
+  <text class="pin" x="38" y="340">&#8592; dbg_instr_done</text>
+
+  <!-- ============ BUS INTERFACE ============ -->
+  <rect class="blk" x="214" y="110" width="210" height="216" rx="8" fill="#f1f4f7" stroke="#b8c2cc"/>
+  <text class="ttl" x="228" y="132" fill="#44525f">BUS INTERFACE</text>
+  <line class="acc" x1="228" y1="140" x2="410" y2="140" stroke="#44525f"/>
+  <text class="mono" x="228" y="160">busAddr[16]  busRead</text>
+  <text class="mono" x="228" y="175">busWrite  busWriteData[8]</text>
+  <text class="mono" x="228" y="190" fill="#5a6470">(driven by FSM &amp; microcode</text>
+  <text class="mono" x="228" y="205" fill="#5a6470">&#160;via mcBus)</text>
+  <text class="mono" x="228" y="226">stall-hold regs:</text>
+  <text class="mono" x="228" y="241">&#160;busAddrHold busReadHold</text>
+  <text class="mono" x="228" y="264">memAddr = stall?hold:bus</text>
+  <text class="mono" x="228" y="279">memRead = stall?hold:bus</text>
+  <text class="mono" x="228" y="294">memWrite = busWr &amp; !stall</text>
+  <text class="mono" x="228" y="309">memWriteData = busWrData</text>
+
+  <!-- ============ CONTROL UNIT / FSM ============ -->
+  <rect class="blk" x="470" y="110" width="300" height="276" rx="8" fill="#eef8f1" stroke="#9fd4ad"/>
+  <text class="ttl" x="484" y="132" fill="#2c7440">CONTROL UNIT — FSM</text>
+  <line class="acc" x1="484" y1="140" x2="756" y2="140" stroke="#2c7440"/>
+  <text class="mono" x="484" y="158">state[3] · 8 states:</text>
+  <text class="mono" x="484" y="172">&#160;sFetchOpcode    sExec</text>
+  <text class="mono" x="484" y="186">&#160;sFetchImm8      sFetchCBOpcode</text>
+  <text class="mono" x="484" y="200">&#160;sFetchImm16Lo   sHalt</text>
+  <text class="mono" x="484" y="214">&#160;sFetchImm16Hi   sInterrupt</text>
+  <text class="mono" x="484" y="232">timing: tcycle[2] (T0–T3)</text>
+  <text class="mono" x="484" y="246">&#160;&#160;&#160;&#160;&#160;&#160;&#160;mcycle[3]</text>
+  <text class="mono" x="484" y="260">regs: IR[8] IR2[8] halted</text>
+  <text class="mono" x="484" y="274">&#160;&#160;&#160;&#160;&#160;IME  IME_pending</text>
+  <text class="mono" x="484" y="292" fill="#2c7440">fast-path decode (4T total):</text>
+  <text class="mono" x="484" y="306">&#160;NOP · LD r,r' · ALU A,r</text>
+  <text class="mono" x="484" y="320">&#160;INC/DEC r · RLCA/RRCA/RLA/RRA</text>
+  <text class="mono" x="484" y="334">&#160;SCF · CCF · CPL · JP (HL)</text>
+  <text class="mono" x="484" y="352" fill="#2c7440">decode &#8594; needsImm8 / needsImm16</text>
+  <text class="mono" x="484" y="366">&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;/ CB-prefix / HALT</text>
+
+  <!-- ============ INTERRUPT CONTROLLER ============ -->
+  <rect class="blk" x="470" y="406" width="300" height="160" rx="8" fill="#fdeeed" stroke="#eda9a6"/>
+  <text class="ttl" x="484" y="428" fill="#a8322e">INTERRUPT CONTROLLER</text>
+  <line class="acc" x1="484" y1="436" x2="756" y2="436" stroke="#a8322e"/>
+  <text class="mono" x="484" y="456">in:  IE[8] IF[8] IME PC halted</text>
+  <text class="mono" x="484" y="472">out: should_irq</text>
+  <text class="mono" x="484" y="488">&#160;&#160;&#160;&#160;&#160;irq_vector[16] irq_index[3]</text>
+  <text class="mono" x="484" y="508">latch: irqVectorLatched</text>
+  <text class="mono" x="484" y="524">&#160;&#160;&#160;&#160;&#160;&#160;&#160;irqIndexLatched</text>
+  <text class="mono" x="484" y="544" fill="#a8322e">sInterrupt: clear IF · push PC</text>
+  <text class="mono" x="484" y="558">&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;PC &#8592; vector</text>
+
+  <!-- ============ MICROCODE ROM ============ -->
+  <rect class="blk" x="812" y="110" width="250" height="244" rx="8" fill="#f4eefc" stroke="#c4b0ec"/>
+  <text class="ttl" x="826" y="132" fill="#5a3a9c">MICROCODE ROM</text>
+  <line class="acc" x1="826" y1="140" x2="1048" y2="140" stroke="#5a3a9c"/>
+  <text class="mono" x="826" y="158">Microcode(</text>
+  <text class="mono" x="826" y="172">&#160;IR, mcycle, tcycle,</text>
+  <text class="mono" x="826" y="186">&#160;sampled A..L / PC / SP,</text>
+  <text class="mono" x="826" y="200">&#160;imm8, imm16, IME, mcBus )</text>
+  <text class="mono" x="826" y="214" fill="#5a3a9c">&#160;&#8594; u.{PC,SP,A,F,B..L,</text>
+  <text class="mono" x="826" y="228" fill="#5a3a9c">&#160;&#160;&#160;&#160;IME, done, next_mcycle}</text>
+  <text class="mono" x="826" y="248">MicrocodeCB(</text>
+  <text class="mono" x="826" y="262">&#160;IR2, mcycle, tcycle,</text>
+  <text class="mono" x="826" y="276">&#160;sampled regs, CB_imm8 )</text>
+  <text class="mono" x="826" y="290" fill="#5a3a9c">&#160;&#8594; cbOut.{A..L, imm8,</text>
+  <text class="mono" x="826" y="304" fill="#5a3a9c">&#160;&#160;&#160;&#160;done, next_mcycle}</text>
+  <text class="mono" x="826" y="324">drives mcBus &#8594; bus iface:</text>
+  <text class="mono" x="826" y="338">&#160;memAddr memWriteData R/W</text>
+
+  <!-- ============ REGISTER FILE ============ -->
+  <rect class="blk" x="1104" y="110" width="210" height="224" rx="8" fill="#eef5fc" stroke="#9cc3ea"/>
+  <text class="ttl" x="1118" y="132" fill="#1f5e96">REGISTER FILE</text>
+  <line class="acc" x1="1118" y1="140" x2="1300" y2="140" stroke="#1f5e96"/>
+  <text class="mono" x="1118" y="158">8-bit: A   F &#8594; Z N H C</text>
+  <text class="mono" x="1118" y="172">&#160;&#160;&#160;&#160;&#160;&#160;B   C</text>
+  <text class="mono" x="1118" y="186">&#160;&#160;&#160;&#160;&#160;&#160;D   E</text>
+  <text class="mono" x="1118" y="200">&#160;&#160;&#160;&#160;&#160;&#160;H   L</text>
+  <text class="mono" x="1118" y="218">16-bit: PC[16]   SP[16]</text>
+  <text class="mono" x="1118" y="236">latched: imm8[8] imm16[16]</text>
+  <text class="mono" x="1118" y="250">&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;IR2[8] CB_imm8[8]</text>
+  <text class="mono" x="1118" y="268" fill="#1f5e96">sampled shadow (fetch snap):</text>
+  <text class="mono" x="1118" y="282">&#160;A.._sampled PC/SP_sampled</text>
+  <text class="mono" x="1118" y="296">&#160;&#8594; feeds microcode / M-cycle</text>
+  <text class="mono" x="1118" y="314">ctrl: IME  IME_pending</text>
+
+  <!-- ============ ALU ============ -->
+  <rect class="blk" x="1346" y="110" width="230" height="246" rx="8" fill="#fdf3e7" stroke="#e9b97e"/>
+  <text class="ttl" x="1360" y="132" fill="#a85f17">ALU + FLAGS</text>
+  <line class="acc" x1="1360" y1="140" x2="1562" y2="140" stroke="#a85f17"/>
+  <!-- ALU trapezoid symbol -->
+  <path d="M1366,162 L1452,162 L1461,178 L1470,162 L1556,162 L1520,300 L1402,300 Z"
+        fill="#fbe6c8" stroke="#d99a45" stroke-width="1.4"/>
+  <text class="mono" x="1412" y="186">ADD ADC SUB SBC</text>
+  <text class="mono" x="1412" y="202">AND XOR OR  CP</text>
+  <text class="mono" x="1412" y="218">INC DEC</text>
+  <text class="mono" x="1412" y="234">RLC RRC RL RR</text>
+  <text class="mono" x="1412" y="250">SLA SRA SWAP SRL</text>
+  <text class="mono" x="1412" y="266">BIT RES SET</text>
+  <rect x="1402" y="312" width="118" height="30" rx="5" fill="#fff" stroke="#d99a45" stroke-width="1.2"/>
+  <text class="mono" x="1428" y="331" font-weight="700">F : Z N H C</text>
+
+  <!-- ================= WIRING (point-to-point) ================= -->
+
+  <!-- EXTERNAL <-> BUS IF -->
+  <path class="sig" d="M174,168 L214,168" marker-end="url(#ar)"/>
+  <text class="wlbl" x="178" y="162">data in [8]</text>
+  <path class="sig" d="M214,206 L174,206" marker-end="url(#ar)"/>
+  <text class="wlbl" x="176" y="222">addr/RW/wr</text>
+
+  <!-- BUS IF -> CONTROL (opcode/imm into IR) -->
+  <path class="sig" d="M424,182 L470,182" marker-end="url(#ar)"/>
+  <text class="wlbl" x="426" y="176">memReadData[8] &#8594; IR/imm</text>
+
+  <!-- CONTROL <-> MICROCODE -->
+  <path class="sig" d="M770,190 L812,190" marker-end="url(#ar)"/>
+  <text class="wlbl" x="772" y="184">IR, mcycle, tcycle</text>
+  <path class="sig" d="M812,242 L770,242" marker-end="url(#ar)"/>
+  <text class="wlbl" x="773" y="258">done / next_mcycle</text>
+
+  <!-- MICROCODE <-> REGISTERS -->
+  <path class="sig" d="M1062,190 L1104,190" marker-end="url(#ar)"/>
+  <text class="wlbl" x="1063" y="184">u.* writeback</text>
+  <path class="sig" d="M1104,242 L1062,242" marker-end="url(#ar)"/>
+  <text class="wlbl" x="1066" y="258">sampled regs</text>
+
+  <!-- REGISTERS <-> ALU -->
+  <path class="sig" d="M1314,200 L1366,200" marker-end="url(#ar)"/>
+  <text class="wlbl" x="1316" y="194">operands</text>
+  <path class="sig" d="M1366,228 L1314,228" marker-end="url(#ar)"/>
+  <text class="wlbl" x="1318" y="244">result + Z N H C</text>
+
+  <!-- INTERRUPTS -> CONTROL -->
+  <path class="sig" d="M620,406 L620,386" marker-end="url(#ar)"/>
+  <text class="wlbl" x="628" y="400">should_irq · irq_vector &#8594; PC</text>
+  <!-- input into interrupts -->
+  <path class="sig" d="M448,500 L470,500" marker-end="url(#ar)"/>
+  <text class="wlbl" x="392" y="495">IE IF IME PC</text>
+
+  <!-- ================= INTERNAL BUSES ================= -->
+
+  <!-- DATA BUS -->
+  <line class="bus" x1="320" y1="625" x2="1480" y2="625"/>
+  <rect x="320" y="611" width="96" height="16" rx="4" fill="#2f3a45"/>
+  <text x="328" y="623" font-size="10.5" fill="#fff" font-family="ui-monospace, Menlo, monospace" font-weight="700">DATA BUS [8]</text>
+  <!-- data taps -->
+  <line class="tap" x1="330" y1="326" x2="330" y2="625"/>
+  <circle class="jdot" cx="330" cy="625" r="2.6"/>
+  <line class="tap" x1="1180" y1="334" x2="1180" y2="625"/>
+  <circle class="jdot" cx="1180" cy="625" r="2.6"/>
+  <line class="tap" x1="1461" y1="356" x2="1461" y2="625"/>
+  <circle class="jdot" cx="1461" cy="625" r="2.6"/>
+
+  <!-- ADDRESS BUS -->
+  <line class="bus" x1="296" y1="664" x2="1300" y2="664"/>
+  <rect x="296" y="650" width="124" height="16" rx="4" fill="#2f3a45"/>
+  <text x="304" y="662" font-size="10.5" fill="#fff" font-family="ui-monospace, Menlo, monospace" font-weight="700">ADDRESS BUS [16]</text>
+  <!-- address taps -->
+  <line class="tap" x1="312" y1="326" x2="312" y2="664"/>
+  <circle class="jdot" cx="312" cy="664" r="2.6"/>
+  <text class="wlbl" x="318" y="648">busAddr</text>
+  <line class="tap" x1="937" y1="354" x2="937" y2="664"/>
+  <circle class="jdot" cx="937" cy="664" r="2.6"/>
+  <text class="wlbl" x="943" y="648">mcBus.memAddr</text>
+  <line class="tap" x1="1230" y1="334" x2="1230" y2="664"/>
+  <circle class="jdot" cx="1230" cy="664" r="2.6"/>
+  <text class="wlbl" x="1236" y="648">PC / SP</text>
+
+  <!-- ================= LEGEND ================= -->
+  <rect x="24" y="694" width="470" height="180" rx="8" fill="#ffffff" stroke="#dde3e8" stroke-width="1.3"/>
+  <text class="ttl" x="40" y="716" fill="#3a434d">LEGEND</text>
+  <line class="acc" x1="40" y1="724" x2="478" y2="724" stroke="#3a434d"/>
+
+  <line x1="44" y1="740" x2="82" y2="740" class="bus"/>
+  <text class="mono" x="92" y="744">data / address bus &#160; [n] = bit width</text>
+  <line x1="44" y1="762" x2="82" y2="762" class="sig" marker-end="url(#ar)"/>
+  <text class="mono" x="92" y="766">register-transfer / handshake</text>
+
+  <rect x="44" y="780" width="14" height="14" rx="3" fill="#eef5fc" stroke="#9cc3ea"/>
+  <text class="mono" x="64" y="791">Registers</text>
+  <rect x="160" y="780" width="14" height="14" rx="3" fill="#fdf3e7" stroke="#e9b97e"/>
+  <text class="mono" x="180" y="791">ALU</text>
+  <rect x="250" y="780" width="14" height="14" rx="3" fill="#eef8f1" stroke="#9fd4ad"/>
+  <text class="mono" x="270" y="791">Control / FSM</text>
+  <rect x="390" y="780" width="14" height="14" rx="3" fill="#f4eefc" stroke="#c4b0ec"/>
+  <text class="mono" x="410" y="791">Microcode</text>
+  <rect x="44" y="802" width="14" height="14" rx="3" fill="#fdeeed" stroke="#eda9a6"/>
+  <text class="mono" x="64" y="813">Interrupts</text>
+  <rect x="160" y="802" width="14" height="14" rx="3" fill="#f1f4f7" stroke="#b8c2cc"/>
+  <text class="mono" x="180" y="813">Bus interface</text>
+
+  <text class="mono" x="44" y="836" fill="#5a6470">• 4 T-cycles (T0–T3) per machine cycle; FSM frozen while stall=1.</text>
+  <text class="mono" x="44" y="851" fill="#5a6470">• Microcode reads the sampled snapshot; results write back to</text>
+  <text class="mono" x="44" y="866" fill="#5a6470">&#160;&#160;both live and sampled regs at T3; many ops finish in fetch (4T).</text>
+
+  <text x="1568" y="888" text-anchor="end" font-size="10" fill="#9aa3ac" font-family="ui-monospace, Menlo, monospace">generated from LR35902_Core.scala (Chisel3)</text>
+</svg>

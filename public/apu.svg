@@ -1,0 +1,298 @@
+<svg viewBox="0 0 1600 1060" xmlns="http://www.w3.org/2000/svg" font-family="system-ui, 'Segoe UI', Helvetica, Arial, sans-serif">
+  <defs>
+    <marker id="ar" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto" markerUnits="userSpaceOnUse">
+      <path d="M0,0 L8,3.2 L0,6.4 Z" fill="#3c4754"/>
+    </marker>
+    <marker id="arb" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto" markerUnits="userSpaceOnUse">
+      <path d="M0,0 L7,3 L0,6 Z" fill="#1f5e96"/>
+    </marker>
+    <marker id="arg" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto" markerUnits="userSpaceOnUse">
+      <path d="M0,0 L7,3 L0,6 Z" fill="#2c7440"/>
+    </marker>
+  </defs>
+
+  <style>
+    .ttl { font-size: 13px; font-weight: 700; }
+    .acc { stroke-width: 3; }
+    .mono { font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace; font-size: 10.5px; fill: #2a333d; }
+    .sm   { font-family: ui-monospace, Menlo, monospace; font-size: 9.5px; fill: #46505b; }
+    .wlbl { font-size: 9px; fill: #5a6470; font-family: ui-monospace, Menlo, monospace; }
+    .sig  { stroke: #3c4754; stroke-width: 1.6; fill: none; }
+    .data { stroke: #2f3a45; stroke-width: 2.4; fill: none; }
+    .cfg  { stroke: #1f5e96; stroke-width: 1.4; fill: none; stroke-dasharray: 4 3; }
+    .tk   { stroke: #2c7440; stroke-width: 1.4; fill: none; }
+    .pl   { stroke: #44525f; stroke-width: 1.4; fill: none; }
+    .ctl  { stroke: #8a93a0; stroke-width: 1.3; fill: none; stroke-dasharray: 5 3; }
+    .chip { fill: #efe7fb; stroke: #b79fe0; stroke-width: 1.1; }
+    .chl  { font-family: ui-monospace, Menlo, monospace; font-size: 9.5px; fill: #4a2f86; font-weight: 600; text-anchor: middle; }
+  </style>
+
+  <rect x="0" y="0" width="1600" height="1060" fill="#fbfcfd"/>
+
+  <!-- title -->
+  <text x="32" y="42" font-size="24" font-weight="700" fill="#1c2530">APU — Audio Processing Unit</text>
+  <text x="32" y="64" font-size="12.5" fill="#5a6470" font-family="ui-monospace, Menlo, monospace">Chisel3 RTL schematic · APU.scala · 4 channels → DAC → panning/mix → stereo out · frame-sequencer driven</text>
+  <line x1="32" y1="78" x2="1568" y2="78" stroke="#dde3e8" stroke-width="1.5"/>
+
+  <!-- ============ CLOCKS & CPU BUS ============ -->
+  <rect x="24" y="96" width="176" height="250" rx="8" fill="#f1f4f7" stroke="#b8c2cc" stroke-width="1.4"/>
+  <text class="ttl" x="38" y="118" fill="#44525f">CLOCKS &amp; CPU BUS</text>
+  <line class="acc" x1="38" y1="126" x2="186" y2="126" stroke="#44525f"/>
+  <text class="mono" x="38" y="146">&#8594; pulse4Mhz (4 MHz)</text>
+  <text class="mono" x="38" y="162">&#8594; divApu (DIV-APU)</text>
+  <text class="mono" x="38" y="184">&#8594; addr[8]  FF10–3F</text>
+  <text class="mono" x="38" y="200">&#8594; write</text>
+  <text class="mono" x="38" y="216">&#8594; writeData[8]</text>
+  <text class="mono" x="38" y="232">&#8592; readData[8]</text>
+  <text class="sm" x="38" y="256">register port at FF10–FF3F;</text>
+  <text class="sm" x="38" y="270">reads OR-mask unused bits</text>
+  <text class="sm" x="38" y="284">to 1. writes gated by</text>
+  <text class="sm" x="38" y="298">apuEnabled (except NR52).</text>
+
+  <!-- ============ APU REGISTERS ============ -->
+  <rect x="216" y="96" width="252" height="250" rx="8" fill="#eef5fc" stroke="#9cc3ea" stroke-width="1.4"/>
+  <text class="ttl" x="230" y="118" fill="#1f5e96">APU REGISTERS (NRxx)</text>
+  <line class="acc" x1="230" y1="126" x2="454" y2="126" stroke="#1f5e96"/>
+  <text class="mono" x="230" y="146">CH1: NR10 NR11 NR12 NR13 NR14</text>
+  <text class="mono" x="230" y="161">CH2: NR21 NR22 NR23 NR24</text>
+  <text class="mono" x="230" y="176">CH3: NR30 NR31 NR32 NR33 NR34</text>
+  <text class="mono" x="230" y="191">CH4: NR41 NR42 NR43 NR44</text>
+  <text class="mono" x="230" y="208">NR50 vol · NR51 pan · NR52 ctl</text>
+  <text class="sm" x="230" y="228" fill="#1f5e96">apuEnabled = NR52[7]</text>
+  <text class="sm" x="230" y="244">NRx1 write &#8594; lengthLoad pulse</text>
+  <text class="sm" x="230" y="258">NRx4[7] write &#8594; channel trigger</text>
+  <text class="sm" x="230" y="272">NRx4 write &#8594; length extra-clk quirk</text>
+  <text class="sm" x="230" y="290" fill="#a8322e">power off (NR52[7]=0): zero all</text>
+  <text class="sm" x="230" y="304" fill="#a8322e">NRxx, disable ch, reload lengths</text>
+  <text class="sm" x="230" y="318">power on: reset frame sequencer</text>
+
+  <!-- ============ FRAME SEQUENCER ============ -->
+  <rect x="216" y="362" width="252" height="118" rx="8" fill="#eef8f1" stroke="#9fd4ad" stroke-width="1.4"/>
+  <text class="ttl" x="230" y="384" fill="#2c7440">FRAME SEQUENCER</text>
+  <line class="acc" x1="230" y1="392" x2="454" y2="392" stroke="#2c7440"/>
+  <text class="mono" x="230" y="412">clk: DIV-APU falling edge</text>
+  <text class="mono" x="230" y="427">step[3] — 8 phases</text>
+  <text class="mono" x="230" y="442">ticks &#8594; length 256 Hz</text>
+  <text class="mono" x="230" y="457">&#160;&#160;&#160;&#160;&#160;&#160; envelope 64 Hz</text>
+  <text class="mono" x="230" y="472">&#160;&#160;&#160;&#160;&#160;&#160; sweep 128 Hz</text>
+
+  <!-- ============ WAVE RAM ============ -->
+  <rect x="216" y="496" width="252" height="104" rx="8" fill="#eef5fc" stroke="#9cc3ea" stroke-width="1.4"/>
+  <text class="ttl" x="230" y="518" fill="#1f5e96">WAVE RAM (FF30–3F)</text>
+  <line class="acc" x1="230" y1="526" x2="454" y2="526" stroke="#1f5e96"/>
+  <text class="mono" x="230" y="546">16 bytes = 32 × 4-bit samples</text>
+  <text class="mono" x="230" y="561">CH3 fetch: waveRam[waveAddr]</text>
+  <text class="sm" x="230" y="578">CPU R/W; CGB remaps to active</text>
+  <text class="sm" x="230" y="592">byte while CH3 on (read hold)</text>
+
+  <!-- ============ CHANNEL STATUS ============ -->
+  <rect x="216" y="616" width="252" height="104" rx="8" fill="#eef8f1" stroke="#9fd4ad" stroke-width="1.4"/>
+  <text class="ttl" x="230" y="638" fill="#2c7440">CHANNEL STATUS</text>
+  <line class="acc" x1="230" y1="646" x2="454" y2="646" stroke="#2c7440"/>
+  <text class="sm" x="230" y="664">chNActive = apuEnabled &amp; chNEnabled</text>
+  <text class="sm" x="230" y="678">&#160;&#160;&amp; dacEnabled &amp; !channelDisable</text>
+  <text class="sm" x="230" y="696">&#8594; NR52 read, bits [3:0]</text>
+  <text class="sm" x="230" y="710">&#8594; DAC enable gating</text>
+
+  <!-- ============ CHANNELS ============ -->
+  <!-- CH1 -->
+  <rect x="500" y="96" width="440" height="150" rx="8" fill="#f4eefc" stroke="#c4b0ec" stroke-width="1.4"/>
+  <text class="ttl" x="514" y="118" fill="#5a3a9c">CH1 — PULSE + SWEEP</text>
+  <text class="sm" x="700" y="118" fill="#7a5fb0">PulseChannelWithSweep</text>
+  <line class="acc" x1="514" y1="126" x2="926" y2="126" stroke="#5a3a9c"/>
+  <g>
+    <rect class="chip" x="516" y="134" width="76" height="34" rx="5"/><text class="chl" x="554" y="155">Length</text>
+    <rect class="chip" x="600" y="134" width="76" height="34" rx="5"/><text class="chl" x="638" y="155">Vol env</text>
+    <rect class="chip" x="684" y="134" width="76" height="34" rx="5"/><text class="chl" x="722" y="155">Freq tmr</text>
+    <rect class="chip" x="768" y="134" width="76" height="34" rx="5"/><text class="chl" x="806" y="155">Duty gen</text>
+    <rect class="chip" x="852" y="134" width="76" height="34" rx="5"/><text class="chl" x="890" y="155">Sweep</text>
+  </g>
+  <text class="sm" x="516" y="190">cfg: duty NR11[7:6] · len NR11[5:0] · vol NR12 · freq NR13/14 · sweep NR10 · en NR14[6]</text>
+  <text class="sm" x="516" y="206" fill="#5a3a9c">out &#8594; digital[0–15], dacEnabled, channelDisable</text>
+  <text class="sm" x="516" y="222" fill="#a85f17">sweepFreqWrite &#8594; rewrites NR13 / NR14[2:0]</text>
+
+  <!-- CH2 -->
+  <rect x="500" y="262" width="440" height="132" rx="8" fill="#f4eefc" stroke="#c4b0ec" stroke-width="1.4"/>
+  <text class="ttl" x="514" y="284" fill="#5a3a9c">CH2 — PULSE</text>
+  <text class="sm" x="640" y="284" fill="#7a5fb0">PulseChannel</text>
+  <line class="acc" x1="514" y1="292" x2="926" y2="292" stroke="#5a3a9c"/>
+  <g>
+    <rect class="chip" x="516" y="300" width="76" height="34" rx="5"/><text class="chl" x="554" y="321">Length</text>
+    <rect class="chip" x="600" y="300" width="76" height="34" rx="5"/><text class="chl" x="638" y="321">Vol env</text>
+    <rect class="chip" x="684" y="300" width="76" height="34" rx="5"/><text class="chl" x="722" y="321">Freq tmr</text>
+    <rect class="chip" x="768" y="300" width="76" height="34" rx="5"/><text class="chl" x="806" y="321">Duty gen</text>
+  </g>
+  <text class="sm" x="516" y="356">cfg: duty NR21[7:6] · len NR21[5:0] · vol NR22 · freq NR23/24 · en NR24[6]</text>
+  <text class="sm" x="516" y="372" fill="#5a3a9c">out &#8594; digital[0–15], dacEnabled, channelDisable</text>
+
+  <!-- CH3 -->
+  <rect x="500" y="410" width="440" height="140" rx="8" fill="#f4eefc" stroke="#c4b0ec" stroke-width="1.4"/>
+  <text class="ttl" x="514" y="432" fill="#5a3a9c">CH3 — WAVE</text>
+  <text class="sm" x="630" y="432" fill="#7a5fb0">WaveChannel</text>
+  <line class="acc" x1="514" y1="440" x2="926" y2="440" stroke="#5a3a9c"/>
+  <g>
+    <rect class="chip" x="516" y="448" width="76" height="34" rx="5"/><text class="chl" x="554" y="469">Length</text>
+    <rect class="chip" x="600" y="448" width="76" height="34" rx="5"/><text class="chl" x="638" y="469">Freq tmr</text>
+    <rect class="chip" x="684" y="448" width="84" height="34" rx="5"/><text class="chl" x="726" y="469">Wave smp</text>
+    <rect class="chip" x="776" y="448" width="76" height="34" rx="5"/><text class="chl" x="814" y="469">Vol shift</text>
+  </g>
+  <text class="sm" x="516" y="504">cfg: len NR31 · freq NR33/34 · vol NR32[6:5] · DAC NR30[7] · en NR34[6]</text>
+  <text class="sm" x="516" y="520" fill="#1f5e96">samples &#8592; Wave RAM (waveAddr / waveData)</text>
+  <text class="sm" x="516" y="536" fill="#5a3a9c">out &#8594; digital[0–15], dacEnabled, channelDisable</text>
+
+  <!-- CH4 -->
+  <rect x="500" y="566" width="440" height="132" rx="8" fill="#f4eefc" stroke="#c4b0ec" stroke-width="1.4"/>
+  <text class="ttl" x="514" y="588" fill="#5a3a9c">CH4 — NOISE</text>
+  <text class="sm" x="640" y="588" fill="#7a5fb0">NoiseChannel</text>
+  <line class="acc" x1="514" y1="596" x2="926" y2="596" stroke="#5a3a9c"/>
+  <g>
+    <rect class="chip" x="516" y="604" width="76" height="34" rx="5"/><text class="chl" x="554" y="625">Length</text>
+    <rect class="chip" x="600" y="604" width="76" height="34" rx="5"/><text class="chl" x="638" y="625">Vol env</text>
+    <rect class="chip" x="684" y="604" width="120" height="34" rx="5"/><text class="chl" x="744" y="625">LFSR + divider</text>
+  </g>
+  <text class="sm" x="516" y="660">cfg: len NR41[5:0] · vol NR42 · LFSR NR43 (clkShift / shortMode / clkDiv) · en NR44[6]</text>
+  <text class="sm" x="516" y="676" fill="#5a3a9c">out &#8594; digital[0–15], dacEnabled, channelDisable</text>
+
+  <!-- ============ broadcast buses into channels ============ -->
+  <!-- cfg (blue dashed) -->
+  <path class="cfg" d="M466,130 L466,690"/>
+  <!-- ticks (green) from frame sequencer -->
+  <path class="tk" d="M468,420 L476,420 L476,130 M476,420 L476,690"/>
+  <!-- pulse4Mhz (gray) routed below registers -->
+  <path class="pl" d="M200,300 L208,300 L208,354 L486,354 L486,130 M486,354 L486,690"/>
+  <text class="wlbl" x="214" y="349">pulse4Mhz × apuEnabled</text>
+
+  <!-- taps into each channel (mids 171, 328, 480, 632) -->
+  <!-- CH1 -->
+  <path class="cfg" d="M466,159 L500,159" marker-end="url(#arb)"/>
+  <path class="tk"  d="M476,171 L500,171" marker-end="url(#arg)"/>
+  <path class="pl"  d="M486,183 L500,183" marker-end="url(#ar)"/>
+  <!-- CH2 -->
+  <path class="cfg" d="M466,316 L500,316" marker-end="url(#arb)"/>
+  <path class="tk"  d="M476,328 L500,328" marker-end="url(#arg)"/>
+  <path class="pl"  d="M486,340 L500,340" marker-end="url(#ar)"/>
+  <!-- CH3 -->
+  <path class="cfg" d="M466,468 L500,468" marker-end="url(#arb)"/>
+  <path class="tk"  d="M476,480 L500,480" marker-end="url(#arg)"/>
+  <path class="pl"  d="M486,492 L500,492" marker-end="url(#ar)"/>
+  <!-- CH4 -->
+  <path class="cfg" d="M466,620 L500,620" marker-end="url(#arb)"/>
+  <path class="tk"  d="M476,632 L500,632" marker-end="url(#arg)"/>
+  <path class="pl"  d="M486,644 L500,644" marker-end="url(#ar)"/>
+
+  <!-- CPU bus <-> registers -->
+  <path class="sig" d="M200,180 L216,180" marker-end="url(#ar)"/>
+  <text class="wlbl" x="150" y="174">addr/write/wd</text>
+  <path class="sig" d="M216,210 L200,210" marker-end="url(#ar)"/>
+  <text class="wlbl" x="158" y="225">readData</text>
+
+  <!-- CH1 sweep feedback to registers -->
+  <path class="sig" d="M516,232 L470,232 L470,300" stroke="#a85f17"/>
+  <text class="wlbl" x="476" y="246" fill="#a85f17">sweep&#8594;NR13/14</text>
+
+  <!-- Wave RAM <-> CH3 -->
+  <path class="sig" d="M500,520 L482,520 L482,560 L468,560" marker-end="url(#ar)"/>
+  <text class="wlbl" x="430" y="545">waveAddr</text>
+  <path class="sig" d="M468,540 L500,500" marker-end="url(#ar)" stroke="#1f5e96"/>
+  <text class="wlbl" x="438" y="512" fill="#1f5e96">waveData</text>
+
+  <!-- channel status dashed from CH4 -->
+  <path class="ctl" d="M500,690 L478,690 L478,660 L468,660" marker-end="url(#arc)"/>
+
+  <!-- ============ DAC ============ -->
+  <rect x="970" y="96" width="150" height="602" rx="8" fill="#fdf3e7" stroke="#e9b97e" stroke-width="1.4"/>
+  <text class="ttl" x="984" y="118" fill="#a85f17">DAC ×4</text>
+  <line class="acc" x1="984" y1="126" x2="1106" y2="126" stroke="#a85f17"/>
+  <text class="sm" x="984" y="144">15 − 2·digital</text>
+  <text class="sm" x="984" y="158">→ signed [6]</text>
+  <rect x="984" y="150" width="122" height="42" rx="5" fill="#fff" stroke="#d99a45"/>
+  <text class="mono" x="994" y="176">CH1 DAC</text>
+  <rect x="984" y="306" width="122" height="42" rx="5" fill="#fff" stroke="#d99a45"/>
+  <text class="mono" x="994" y="332">CH2 DAC</text>
+  <rect x="984" y="458" width="122" height="42" rx="5" fill="#fff" stroke="#d99a45"/>
+  <text class="mono" x="994" y="484">CH3 DAC</text>
+  <rect x="984" y="610" width="122" height="42" rx="5" fill="#fff" stroke="#d99a45"/>
+  <text class="mono" x="994" y="636">CH4 DAC</text>
+  <text class="sm" x="984" y="676">gated by active</text>
+  <text class="sm" x="984" y="690">&amp; dacEnabled</text>
+
+  <!-- channel out -> DAC -->
+  <path class="data" d="M940,171 L984,171" marker-end="url(#ar)"/>
+  <text class="wlbl" x="942" y="165">digital[4]</text>
+  <path class="data" d="M940,328 L984,328" marker-end="url(#ar)"/>
+  <path class="data" d="M940,480 L984,480" marker-end="url(#ar)"/>
+  <path class="data" d="M940,632 L984,632" marker-end="url(#ar)"/>
+
+  <!-- ============ MIXER + PANNING ============ -->
+  <rect x="1150" y="210" width="240" height="300" rx="8" fill="#fdeeed" stroke="#eda9a6" stroke-width="1.4"/>
+  <text class="ttl" x="1164" y="232" fill="#a8322e">MIXER + PANNING</text>
+  <line class="acc" x1="1164" y1="240" x2="1376" y2="240" stroke="#a8322e"/>
+  <text class="mono" x="1164" y="262">NR51 panning:</text>
+  <text class="sm" x="1164" y="278">panLeft[i]  = NR51[4+i]</text>
+  <text class="sm" x="1164" y="292">panRight[i] = NR51[i]</text>
+  <text class="mono" x="1164" y="316">leftMix  = Σ panL·DAC  (+&amp;)</text>
+  <text class="mono" x="1164" y="331">rightMix = Σ panR·DAC  (+&amp;)</text>
+  <text class="sm" x="1164" y="348">expanding add — no wrap</text>
+  <text class="mono" x="1164" y="372">NR50 master volume:</text>
+  <text class="sm" x="1164" y="388">leftVol  = NR50[6:4] + 1</text>
+  <text class="sm" x="1164" y="402">rightVol = NR50[2:0] + 1</text>
+  <text class="mono" x="1164" y="426">left  = leftMix  · leftVol</text>
+  <text class="mono" x="1164" y="441">right = rightMix · rightVol</text>
+  <text class="sm" x="1164" y="462" fill="#a8322e">output forced to 0 when</text>
+  <text class="sm" x="1164" y="476" fill="#a8322e">apuEnabled = 0</text>
+  <text class="sm" x="1164" y="496">truncated to [9:0] → SInt(10)</text>
+
+  <!-- DAC -> mixer -->
+  <path class="data" d="M1120,171 L1136,171 L1136,250 L1150,250" marker-end="url(#ar)"/>
+  <path class="data" d="M1120,328 L1150,328" marker-end="url(#ar)"/>
+  <path class="data" d="M1120,480 L1150,480" marker-end="url(#ar)"/>
+  <path class="data" d="M1120,632 L1136,632 L1136,470 L1150,470" marker-end="url(#ar)"/>
+  <text class="wlbl" x="1124" y="322">analog[6] ×4</text>
+
+  <!-- NR50/51 to mixer (long dashed bottom route) -->
+  <path class="cfg" d="M340,346 L340,742 L1270,742 L1270,510" marker-end="url(#arb)"/>
+  <text class="wlbl" x="640" y="737" fill="#1f5e96">NR50 master volume · NR51 panning</text>
+
+  <!-- ============ OUTPUT ============ -->
+  <rect x="1420" y="300" width="156" height="120" rx="8" fill="#fdeeed" stroke="#eda9a6" stroke-width="1.4"/>
+  <text class="ttl" x="1434" y="322" fill="#a8322e">STEREO OUT</text>
+  <line class="acc" x1="1434" y1="330" x2="1562" y2="330" stroke="#a8322e"/>
+  <text class="mono" x="1434" y="352">leftOut  [SInt 10]</text>
+  <text class="mono" x="1434" y="372">rightOut [SInt 10]</text>
+  <text class="sm" x="1434" y="396">signed, post-mixer</text>
+  <text class="sm" x="1434" y="410">to audio backend</text>
+
+  <path class="data" d="M1390,360 L1420,360" marker-end="url(#ar)"/>
+  <text class="wlbl" x="1392" y="354">L / R</text>
+
+  <!-- ============ LEGEND ============ -->
+  <rect x="500" y="752" width="640" height="172" rx="8" fill="#ffffff" stroke="#dde3e8" stroke-width="1.3"/>
+  <text class="ttl" x="516" y="774" fill="#3a434d">LEGEND</text>
+  <line class="acc" x1="516" y1="782" x2="1124" y2="782" stroke="#3a434d"/>
+
+  <line x1="520" y1="800" x2="556" y2="800" class="data"/>
+  <text class="mono" x="564" y="804">audio sample / mix bus</text>
+  <line x1="520" y1="820" x2="556" y2="820" class="cfg" marker-end="url(#arb)"/>
+  <text class="mono" x="564" y="824">register config (NRxx)</text>
+  <line x1="520" y1="840" x2="556" y2="840" class="tk" marker-end="url(#arg)"/>
+  <text class="mono" x="564" y="844">frame-sequencer ticks (len/env/sweep)</text>
+  <line x1="520" y1="860" x2="556" y2="860" class="pl" marker-end="url(#ar)"/>
+  <text class="mono" x="564" y="864">pulse4Mhz clock (× apuEnabled)</text>
+  <line x1="520" y1="880" x2="556" y2="880" class="ctl" marker-end="url(#arc)"/>
+  <text class="mono" x="564" y="884">status / control (active, disable)</text>
+
+  <rect x="876" y="794" width="14" height="14" rx="3" fill="#eef5fc" stroke="#9cc3ea"/>
+  <text class="mono" x="896" y="805">Registers / Wave RAM</text>
+  <rect x="876" y="814" width="14" height="14" rx="3" fill="#eef8f1" stroke="#9fd4ad"/>
+  <text class="mono" x="896" y="825">Frame seq / status</text>
+  <rect x="876" y="834" width="14" height="14" rx="3" fill="#f4eefc" stroke="#c4b0ec"/>
+  <text class="mono" x="896" y="845">Channels</text>
+  <rect x="876" y="854" width="14" height="14" rx="3" fill="#fdf3e7" stroke="#e9b97e"/>
+  <text class="mono" x="896" y="865">DAC</text>
+  <rect x="876" y="874" width="14" height="14" rx="3" fill="#fdeeed" stroke="#eda9a6"/>
+  <text class="mono" x="896" y="885">Mixer / panning / output</text>
+
+  <text class="sm" x="516" y="908">DAC: digital 0–15 maps to +1…−1 as 15 − 2·d (negative slope). Per-channel DAC enable comes from each channel's NRx0/NRx2 bits.</text>
+
+  <text x="1568" y="912" text-anchor="end" font-size="10" fill="#9aa3ac" font-family="ui-monospace, Menlo, monospace">generated from APU.scala (Chisel3)</text>
+</svg>
