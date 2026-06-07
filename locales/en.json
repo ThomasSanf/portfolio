@@ -16,6 +16,13 @@
     "bit5": "Tennis player and microsoldering enthusiast",
     "closing": "If you're working on an interesting hardware, embedded, FPGA, or web project, feel free to reach out."
   },
+  "contact": {
+    "badge": "Get in touch",
+    "intro": "What's next? Feel free to reach out to me if you are looking for a developer, have a query, or simply want to connect.",
+    "copyEmail": "Copy email address",
+    "copyPhone": "Copy phone number",
+    "platforms": "You may also find me on these platforms!"
+  },
   "nav": {
     "work": "Work",
     "contact": "Contact",

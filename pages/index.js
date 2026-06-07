@@ -2,6 +2,7 @@ import Head from "next/head";
 import Navbar from "../components/Navbar";
 import Hero from "../components/Hero";
 import About from "../components/About";
+import Contact from "../components/Contact";
 import Works from "../components/Works";
 import { site } from "../data/site";
 import { useI18n } from "../lib/i18n";
@@ -24,6 +25,7 @@ export default function Home() {
         <Hero />
         <Works />
         <About />
+        <Contact />
       </main>
 
       <footer id="contact" className={styles.footer}>

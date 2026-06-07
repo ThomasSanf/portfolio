@@ -7,6 +7,8 @@ export const site = {
   avatar: "/avatar.jpg",
   available: true, // drives the green status dot
   cvUrl: "/CV_Thomas_Sanfourche.pdf", // drop your CV in /public/cv.pdf
+  email: "", // shown in the contact section, e.g. "you@example.com" (empty = hidden)
+  phone: "", // optional, e.g. "+886 900 000 000" (empty = hidden)
   socials: {
     github: "", // add a URL to show the icon; empty = hidden
     twitter: "",
