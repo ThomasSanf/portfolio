@@ -6,7 +6,7 @@ export const site = {
   role: "Electronic Engineering Student · FPGA & Embedded Systems Developer",
   avatar: "/avatar.jpg",
   available: true, // drives the green status dot
-  cvUrl: "/cv.pdf", // drop your CV in /public/cv.pdf
+  cvUrl: "/CV_Thomas_Sanfourche.pdf", // drop your CV in /public/cv.pdf
   socials: {
     github: "", // add a URL to show the icon; empty = hidden
     twitter: "",
