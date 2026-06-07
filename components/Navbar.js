@@ -16,6 +16,7 @@ export default function Navbar() {
 
         <nav className={styles.navLinks}>
           <a href="#work">{t("nav.work")}</a>
+          <a href="#about">{t("nav.about")}</a>
           <a href="#contact">{t("nav.contact")}</a>
         </nav>
 
