@@ -1,18 +1,16 @@
 import { useState } from "react";
 import { site } from "../data/site";
 import {
-  GithubIcon,
-  TwitterIcon,
-  FigmaIcon,
   MailIcon,
-  PhoneIcon,
+  PinIcon,
+  LinkedinIcon,
   CopyIcon,
   CheckIcon,
+  DownloadIcon,
+  ArrowIcon,
 } from "./icons";
 import { useI18n } from "../lib/i18n";
 import styles from "../styles/Home.module.css";
-
-const SOCIAL_ICONS = { github: GithubIcon, twitter: TwitterIcon, figma: FigmaIcon };
 
 function CopyButton({ value, label }) {
   const [copied, setCopied] = useState(false);
@@ -42,61 +40,69 @@ function CopyButton({ value, label }) {
 
 export default function Contact() {
   const { t } = useI18n();
-  const hasSocials = Object.values(site.socials).some(Boolean);
+  const linkedin = site.socials.linkedin;
 
   return (
     <section id="contact" className={styles.contact}>
       <span className={styles.contactBadge}>{t("contact.badge")}</span>
 
+      <h2 className={styles.contactTitle}>{t("contact.title")}</h2>
+
       <p className={styles.contactIntro}>{t("contact.intro")}</p>
 
-      <div className={styles.contactDetails}>
+      {site.available && (
+        <div className={styles.contactStatus}>
+          <span className={`${styles.statusDot} ${styles.statusOn}`} />
+          {t("hero.availability")}
+        </div>
+      )}
+
+      <div className={styles.contactCta}>
         {site.email && (
-          <div className={styles.contactRow}>
-            <a className={styles.contactLink} href={`mailto:${site.email}`}>
-              <MailIcon className={styles.contactIcon} />
-              <span>{site.email}</span>
-            </a>
+          <a className={styles.btnPrimary} href={`mailto:${site.email}`}>
+            <MailIcon width="20" height="20" />
+            {t("contact.emailMe")}
+          </a>
+        )}
+        {site.cvUrl && (
+          <a className={styles.btnGhost} href={site.cvUrl}>
+            <DownloadIcon />
+            {t("nav.cv")}
+          </a>
+        )}
+      </div>
+
+      <div className={styles.contactRows}>
+        {site.email && (
+          <div className={styles.chip}>
+            <MailIcon width="18" height="18" className={styles.contactIcon} />
+            <span>{site.email}</span>
             <CopyButton value={site.email} label={t("contact.copyEmail")} />
           </div>
         )}
 
-        {site.phone && (
-          <div className={styles.contactRow}>
-            <a
-              className={styles.contactLink}
-              href={`tel:${site.phone.replace(/\s+/g, "")}`}
-            >
-              <PhoneIcon className={styles.contactIcon} />
-              <span>{site.phone}</span>
-            </a>
-            <CopyButton value={site.phone} label={t("contact.copyPhone")} />
-          </div>
+        {linkedin && (
+          <a
+            className={`${styles.chip} ${styles.chipLink}`}
+            href={linkedin}
+            target="_blank"
+            rel="noreferrer"
+          >
+            <LinkedinIcon className={styles.contactIcon} />
+            <span>linkedin.com/in/thomas-maxime</span>
+            <ArrowIcon
+              width="16"
+              height="16"
+              className={`${styles.contactIcon} ${styles.chipArrow}`}
+            />
+          </a>
         )}
-      </div>
 
-      {hasSocials && (
-        <>
-          <p className={styles.contactPlatforms}>{t("contact.platforms")}</p>
-          <div className={styles.contactSocials}>
-            {Object.entries(site.socials).map(([key, url]) => {
-              const Icon = SOCIAL_ICONS[key];
-              if (!url || !Icon) return null;
-              return (
-                <a
-                  key={key}
-                  href={url}
-                  target="_blank"
-                  rel="noreferrer"
-                  aria-label={key}
-                >
-                  <Icon />
-                </a>
-              );
-            })}
-          </div>
-        </>
-      )}
+        <div className={styles.chip}>
+          <PinIcon className={styles.contactIcon} />
+          <span>{t("hero.location")}</span>
+        </div>
+      </div>
     </section>
   );
 }
